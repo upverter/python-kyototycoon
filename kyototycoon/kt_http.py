@@ -62,9 +62,9 @@ class Cursor(object):
         Cursor.cursor_id_counter += 1
 
         self.err = kt_error.KyotoTycoonError()
-        self.pack = self.protocol_handler._pickle_packer
-        self.unpack = self.protocol_handler._pickle_unpacker
-        self.pack_type = KT_PACKER_PICKLE
+        self.pack = self.protocol_handler.pack
+        self.unpack = self.protocol_handler.unpack
+        self.pack_type = self.protocol_handler.pack_type
 
     def __enter__(self):
         return self
@@ -305,12 +305,21 @@ class Cursor(object):
 
 
 class ProtocolHandler(object):
-    def __init__(self, pickle_protocol=2):
+    def __init__(self, pack_type=KT_PACKER_PICKLE, pickle_protocol=2):
         self.err = kt_error.KyotoTycoonError()
         self.pickle_protocol = pickle_protocol
-        self.pack = self._pickle_packer
-        self.unpack = self._pickle_unpacker
-        self.pack_type = KT_PACKER_PICKLE
+        self.pack_type = pack_type
+
+        if self.pack_type == KT_PACKER_PICKLE:
+            self.pack = self._pickle_packer
+            self.unpack = self._pickle_unpacker
+
+        elif self.pack_type == KT_PACKER_STRING:
+            self.pack = lambda data: data
+            self.unpack = lambda data: data
+
+        else:
+            raise Exception('unknown pack type specified')
 
     def error(self):
         return self.err

@@ -15,8 +15,8 @@ KT_DEFAULT_PORT = 1978
 KT_DEFAULT_TIMEOUT = 30
 
 class KyotoTycoon(object):
-    def __init__(self, binary=False):
-        self.core = kt_http.ProtocolHandler()
+    def __init__(self, binary=False, *args, **kwargs):
+        self.core = kt_http.ProtocolHandler(*args, **kwargs)
 
     def error(self):
         return self.core.error()
