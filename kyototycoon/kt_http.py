@@ -36,20 +36,34 @@ KT_PACKER_STRING = 3
 def _dict_to_tsv(dict):
     return '\n'.join(quote(k) + '\t' + quote(str(v)) for (k, v) in dict.items())
 
-def _tsv_to_dict(tsv_str, content_type=''):
-    rv = {}
-    # Select the appropriate decoding function to use based on the response headers
+def _content_type_decoder(content_type=''):
+    ''' Select the appropriate decoding function to use based on the response headers. '''
     if content_type.endswith('colenc=B'):
-        decode = base64.decodestring
+        return base64.decodestring
     elif content_type.endswith('colenc=U'):
-        decode = unquote
+        return unquote
     else:
-        decode = lambda x: x
+        return lambda x: x
+
+def _tsv_to_dict(tsv_str, content_type=''):
+    decode = _content_type_decoder(content_type)
+    rv = {}
 
     for row in tsv_str.split('\n'):
         kv = row.split('\t')
         if len(kv) == 2:
             rv[decode(kv[0])] = decode(kv[1])
+    return rv
+
+def _tsv_to_list(tsv_str, content_type=''):
+    decode = _content_type_decoder(content_type)
+    rv = []
+
+    for row in tsv_str.split('\n'):
+        kv = row.split('\t')
+        if len(kv) == 2:
+            pair = (decode(kv[0]), decode(kv[1]))
+            rv.append(pair)
     return rv
 
 
@@ -558,14 +572,16 @@ class ProtocolHandler(object):
             self.err.set_error(self.err.EMISC)
             return False
 
-        res_dict = _tsv_to_dict(body, res.getheader('Content-Type', ''))
-        n = res_dict.pop('num')
-
-        if n == '0':
+        res_list = _tsv_to_list(body, res.getheader('Content-Type', ''))
+        if len(res_list) == 0 or res_list[-1][0] != 'num':
+            self.err.set_err(self.err.EMISC)
+            return False
+        num_key, num = res_list.pop()
+        if num == '0':
             self.err.set_error(self.err.NOTFOUND)
             return []
 
-        for k in res_dict.keys():
+        for k, v in res_list:
             rv.append(k[1:])
 
         self.err.set_success()
@@ -594,13 +610,16 @@ class ProtocolHandler(object):
             return None
 
         rv = []
-        res_dict = _tsv_to_dict(body, res.getheader('Content-Type', ''))
-
-        if res_dict.pop('num') == '0':
+        res_list = _tsv_to_list(body, res.getheader('Content-Type', ''))
+        if len(res_list) == 0 or res_list[-1][0] != 'num':
+            self.err.set_err(self.err.EMISC)
+            return False
+        num_key, num = res_list.pop()
+        if num == '0':
             self.err.set_error(self.err.NOTFOUND)
             return []
 
-        for k in res_dict.keys():
+        for k, v in res_list:
             rv.append(k[1:])
 
         self.err.set_success()
