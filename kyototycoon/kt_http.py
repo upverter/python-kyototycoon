@@ -251,11 +251,11 @@ class Cursor(object):
         res, body = self.protocol_handler.getresponse()
         if res.status == 404:
             self.err.set_error(self.err.NOTFOUND)
-            return None
+            return None, None
 
         if res.status != 200:
             self.err.set_error(self.err.EMISC)
-            return False
+            return False, False
 
         self.err.set_success()
         res_dict = _tsv_to_dict(body, res.getheader('Content-Type', ''))
