@@ -587,6 +587,47 @@ class ProtocolHandler(object):
         self.err.set_success()
         return rv
 
+    def match_prefix_range(self, prefix, start, max, backward=False, db=None):
+        if prefix is None:
+            self.err.set_error(self.err.LOGIC)
+            return None
+
+        rv = []
+        request_dict = {}
+        request_dict['prefix'] = prefix
+        request_dict['start'] = start
+
+        if max:
+            request_dict['max'] = max
+        if db:
+            request_dict['DB'] = db
+        if backward:
+            request_dict['backward'] = backward
+
+        request_body = _dict_to_tsv(request_dict)
+        self.conn.request('POST', '/rpc/match_prefix_range',
+                          body=request_body, headers=KT_HTTP_HEADER)
+
+        res, body = self.getresponse()
+        if res.status != 200:
+            self.err.set_error(self.err.EMISC)
+            return False
+
+        res_list = _tsv_to_list(body, res.getheader('Content-Type', ''))
+        if len(res_list) == 0 or res_list[-1][0] != 'num':
+            self.err.set_err(self.err.EMISC)
+            return False
+        num_key, num = res_list.pop()
+        if num == '0':
+            self.err.set_error(self.err.NOTFOUND)
+            return []
+
+        for k, v in res_list:
+            rv.append(k[1:])
+
+        self.err.set_success()
+        return rv
+
     def match_regex(self, regex, max, db):
         if regex is None:
             self.err.set_error(self.err.LOGIC)
