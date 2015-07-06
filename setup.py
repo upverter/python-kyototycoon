@@ -14,7 +14,7 @@ setup(
     maintainer_email='stephen.hamer@upverter.com',
     name='python-kyototycoon',
     description='Kyoto Tycoon Client Library',
-    version='0.4.8',
+    version='0.4.9',
     license='BSD',
     keywords='Kyoto Tycoon, Kyoto Cabinet',
     packages=['kyototycoon'],
