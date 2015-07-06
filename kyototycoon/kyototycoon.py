@@ -88,6 +88,9 @@ class KyotoTycoon(object):
     def match_prefix(self, prefix, max=None, db=None):
         return self.core.match_prefix(prefix, max, db)
 
+    def match_prefix_range(self, prefix, start, max=None, backward=False, db=None):
+        return self.core.match_prefix_range(prefix, start, max, backward, db)
+
     def match_regex(self, regex, max=None, db=None):
         return self.core.match_regex(regex, max, db)
 
