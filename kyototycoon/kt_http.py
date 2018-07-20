@@ -602,7 +602,7 @@ class ProtocolHandler(object):
         if db:
             request_dict['DB'] = db
         if backward:
-            request_dict['backward'] = backward
+            request_dict['backward'] = 1
 
         request_body = _dict_to_tsv(request_dict)
         self.conn.request('POST', '/rpc/match_prefix_range',
