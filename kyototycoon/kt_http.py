@@ -5,20 +5,25 @@
 # Redistribution and use of this source code is licensed under
 # the BSD license. See COPYING file for license description.
 
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import base64
-import httplib
+import http.client
 import struct
 import time
-import kt_error
+from . import kt_error
 try:
     from percentcoding import quote, unquote
 except ImportError:
-    from urllib import quote as _quote
-    from urllib import unquote
+    from urllib.parse import quote as _quote
+    from urllib.parse import unquote
     quote = lambda s: _quote(s, safe="")
 
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 
@@ -34,7 +39,7 @@ KT_PACKER_JSON   = 2
 KT_PACKER_STRING = 3
 
 def _dict_to_tsv(dict):
-    return '\n'.join(quote(k) + '\t' + quote(str(v)) for (k, v) in dict.items())
+    return '\n'.join(quote(k) + '\t' + quote(str(v)) for (k, v) in list(dict.items()))
 
 def _content_type_decoder(content_type=''):
     ''' Select the appropriate decoding function to use based on the response headers. '''
@@ -349,15 +354,15 @@ class ProtocolHandler(object):
         self.timeout = timeout
 
         try:
-            self.conn = httplib.HTTPConnection(host, port, timeout=timeout)
-        except Exception, e:
+            self.conn = http.client.HTTPConnection(host, port, timeout=timeout)
+        except Exception as e:
             raise e
         return True
 
     def close(self):
         try:
             self.conn.close()
-        except Exception, e:
+        except Exception as e:
             raise e
         return True
 
@@ -422,7 +427,7 @@ class ProtocolHandler(object):
         if atomic:
             request_body = 'atomic\t\n'
 
-        for k, v in kv_dict.items():
+        for k, v in list(kv_dict.items()):
             k = quote(k)
             v = quote(self.pack(v))
             request_body += '_' + k + '\t' + v + '\n'
@@ -506,7 +511,7 @@ class ProtocolHandler(object):
             self.err.set_error(self.err.NOTFOUND)
             return {}
 
-        for k, v in res_dict.items():
+        for k, v in list(res_dict.items()):
             if v is not None:
                 rv[k[1:]] = self.unpack(v)
 
